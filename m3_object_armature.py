@@ -36,7 +36,7 @@ e_vert_format_lookup = (
     ('ROOTED', 'Rooted (Experimental)', 'No bone/weight pairs available. Meshes will be skinned only to their root bone, which will be defined as the mesh\'s first skinned vertex group. Further reduced file size.\n\nWARNING: Is known to cause buggy behavior when selecting objects in the Cutscene Editor, or in some cases a crash'),
 )
 
-class ExportOptionsGroup(bpy.types.PropertyGroup):
+class ExportOptionsGroup( bpy.types.PropertyGroup ):
     output_anims: bpy.props.BoolProperty(default=True, name='Output Animations', description='Include animations in the resulting m3 file. (Unchecked does not apply when exporting as m3a)')
     section_reuse_mode: bpy.props.EnumProperty(default='EXPLICIT', name='Section Reuse', items=e_section_reuse_mode)
     # ! disabling these next two options since I can't reliably make the output models stable

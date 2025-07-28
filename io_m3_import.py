@@ -328,11 +328,11 @@ def armature_object_new():
 
 class Importer:
 
-    def __init__(self, bl_op=None):
-        self.filepath = ''
-        self.bl_op = bl_op
-        self.warn_strings = []
-        self.exception_trace = ''
+    def __init__( self, bl_op=None ):
+        self.filepath           = ''
+        self.bl_op              = bl_op
+        self.warn_strings       = []
+        self.exception_trace    = ''
 
     def do_report(self):
         if len(self.warn_strings):
@@ -348,31 +348,35 @@ class Importer:
                 self.bl_op.report({"ERROR"}, self.exception_trace)
         self.exception_trace = ''
 
-    def m3_import(self, filepath, ob=None, opts=None):
-        self.filepath = filepath
+    def m3_import( self, filepath, ob=None, opts=None ):
+        '''
+            파일경로부터 파일 로드 및 파싱 후 오브젝트 생성
+            '''
+
+        self.filepath           = filepath
         # TODO make fps an import option
         bpy.context.scene.render.fps = FRAME_RATE
 
         self.get_rig, self.get_anims, self.get_mesh, self.get_effects = opts if opts != None else [True] * 4
 
-        self.m3 = io_m3.M3SectionList.load(filepath)
-        self.m3_model = self.m3[self.m3[0][0].model][0]
-        self.m3_division = self.m3[self.m3_model.divisions][0]
+        self.m3                 = io_m3.M3SectionList.load( filepath )
+        self.m3_model           = self.m3[self.m3[0][0].model][0]
+        self.m3_division        = self.m3[self.m3_model.divisions][0]
 
-        self.m3_bl_ref = {}
-        self.bl_ref_objects = []
-        self.stc_id_data = {}
-        self.final_bone_names = {}
+        self.m3_bl_ref          = {}
+        self.bl_ref_objects     = []
+        self.stc_id_data        = {}
+        self.final_bone_names   = {}
 
-        self.is_new_object = not ob
+        self.is_new_object      = not ob
         self.ob = ob or armature_object_new()
 
-        anims_len = len(self.ob.m3_animation_groups)
-        matref_len = len(self.ob.m3_materialrefs)
-        self.anim_index = lambda x: anims_len + x
-        self.matref_index = lambda x: matref_len + x
+        anims_len               = len( self.ob.m3_animation_groups )
+        matref_len              = len( self.ob.m3_materialrefs )
+        self.anim_index         = lambda x: anims_len + x
+        self.matref_index       = lambda x: matref_len + x
 
-        self.m3_struct_version_set_from_ref('m3_model_version', self.m3[0][0].model)
+        self.m3_struct_version_set_from_ref( 'm3_model_version', self.m3[0][0].model )
 
         if self.get_rig:
             if self.get_anims:
@@ -422,7 +426,7 @@ class Importer:
             bpy.ops.m3.material_remove('INVOKE_DEFAULT', quiet=True)
         self.ob.m3_materialrefs_index = user_matref_index
 
-    def m3a_import(self, filepath, ob):
+    def m3a_import( self, filepath, ob ):
 
         def get_m3_id_props():
             hex_id_to_props = {}
@@ -456,11 +460,11 @@ class Importer:
         bpy.context.scene.render.fps = FRAME_RATE
         ob_anim_data_set(bpy.context.scene, ob, None)
 
-        self.is_new_object = False
-        self.ob = ob
-        self.m3 = io_m3.M3SectionList.load(filepath)
-        self.m3_model = self.m3[self.m3[0][0].model][0]
-        self.stc_id_data = {}
+        self.is_new_object  = False
+        self.ob             = ob
+        self.m3             = io_m3.M3SectionList.load( filepath )
+        self.m3_model       = self.m3[self.m3[0][0].model][0]
+        self.stc_id_data    = {}
 
         anims_len = len(self.ob.m3_animation_groups)
         self.anim_index = lambda x: anims_len + x
@@ -1818,15 +1822,15 @@ class Importer:
         return me_ob
 
 
-def m3_import(filepath, ob=None, bl_op=None, opts=None):
-    importer = Importer(bl_op)
+def m3_import( filepath, ob=None, bl_op=None, opts=None ):
+    importer = Importer( bl_op )
     try:
-        if ob and filepath.endswith('.m3a'):
-            importer.m3a_import(filepath, ob)
+        if ob and filepath.endswith( '.m3a' ):
+            importer.m3a_import( filepath, ob )
         elif ob:
-            importer.m3_import(filepath, ob, opts=opts)
+            importer.m3_import( filepath, ob, opts=opts )
         else:
-            importer.m3_import(filepath, ob)
+            importer.m3_import( filepath, ob )
     except Exception as e:
         if type(e) != AssertionError:
             importer.exception_trace = traceback.format_exc()

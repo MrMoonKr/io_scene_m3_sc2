@@ -26,74 +26,81 @@ from sys import stderr
 from xml.etree import ElementTree as ET
 
 primitive_field_info = {
-    'uint8': {'format': 'B', 'min': 0, 'max': (1 << 8) - 1},
-    'int16': {'format': 'h', 'min': -1 << 15, 'max': (1 << 15) - 1}, 'uint16': {'format': 'H', 'min': 0, 'max': (1 << 16) - 1},
-    'int32': {'format': 'i', 'min': -1 << 31, 'max': (1 << 31) - 1}, 'uint32': {'format': 'I', 'min': 0, 'max': (1 << 32) - 1},
-    'uint64': {'format': 'Q', 'min': 0, 'max': (1 << 64) - 1}, 'float': {'format': 'f'},
+    'uint8':  {'format': 'B', 'min': 0, 'max': (1 << 8) - 1},
+    'int16':  {'format': 'h', 'min': -1 << 15, 'max': (1 << 15) - 1},
+    'uint16': {'format': 'H', 'min': 0, 'max': (1 << 16) - 1},
+    'int32':  {'format': 'i', 'min': -1 << 31, 'max': (1 << 31) - 1},
+    'uint32': {'format': 'I', 'min': 0, 'max': (1 << 32) - 1},
+    'uint64': {'format': 'Q', 'min': 0, 'max': (1 << 64) - 1},
+    'float':  {'format': 'f'},
 }
 
 
 def structures_from_tree():
 
-    def parse_hex_str(hex_string):
-        return bytes([int(hex_string[x + 2:x + 4], 16) for x in range(0, len(hex_string) - 2, 2)]) if hex_string else None
+    def parse_hex_str( hex_string ):
+        return bytes( [ int( hex_string[ x+2:x+4 ], 16 ) for x in range( 0, len( hex_string ) - 2, 2 ) ] ) if hex_string else None
 
-    histories = {}
-    for xml_structure in ET.parse(path.join(path.dirname(__file__), 'structures.xml')).getroot().findall('structure'):
-        xml_structure_name = xml_structure.get('name')
-        xml_versions = xml_structure.findall('versions')[0].findall('version')
-        version_max = max(set([int(xml_version.get('number')) for xml_version in xml_versions]))
-        version_to_size = {int(xml_version.get('number')): int(xml_version.get('size')) for xml_version in xml_versions}
+    histories       = {}
+    full_path       = path.join( path.dirname( __file__ ), 'structures.xml' )
+    xml             = ET.parse( full_path )
+    roots           = xml.getroot()
+    struct_nodes    = roots.findall( 'structure' )
+    for xml_structure in ET.parse( path.join( path.dirname( __file__ ), 'structures.xml' ) ).getroot().findall( 'structure' ):
+        xml_structure_name      = xml_structure.get('name')
+        xml_versions            = xml_structure.findall('versions')[0].findall('version')
+        version_max             = max( set( [int( xml_version.get('number') ) for xml_version in xml_versions ] ) )
+        version_to_size         = { int( xml_version.get('number') ): int( xml_version.get( 'size' ) ) for xml_version in xml_versions }
 
-        all_field_versions = []
+        all_field_versions      = []
         for xml_field in xml_structure.findall('fields')[0].findall('field'):
-            str_name = xml_field.get('name')
-            str_type = xml_field.get('type')
-            str_ref_to = xml_field.get('ref_to')
-            str_size = xml_field.get('size')
-            str_since_version = xml_field.get('since_version', None)
-            str_till_version = xml_field.get('till_version', None)
-            str_default_val = xml_field.get('default_value', None)
-            str_expected_val = xml_field.get('expected_value', None)
-            since_version = int(str_since_version) if str_since_version is not None else None
-            till_version = int(str_till_version) if str_till_version is not None else None
+            str_name            = xml_field.get('name')
+            str_type            = xml_field.get('type')
+            str_ref_to          = xml_field.get('ref_to')
+            str_size            = xml_field.get('size')
+            str_since_version   = xml_field.get('since_version', None)
+            str_till_version    = xml_field.get('till_version', None)
+            str_default_val     = xml_field.get('default_value', None)
+            str_expected_val    = xml_field.get('expected_value', None)
+            since_version       = int(str_since_version) if str_since_version is not None else None
+            till_version        = int(str_till_version) if str_till_version is not None else None
 
             if str_type in primitive_field_info and 'int' in str_type:
-                default_val = int(str_default_val, 0) if str_default_val else None
-                expected_val = int(str_expected_val, 0) if str_expected_val else None
-                bitmasks = {}
-                xml_bits = xml_field.findall('bits')
-                if len(xml_bits):
-                    bitmasks = {xml_bit.get('name'): int(xml_bit.get('mask'), 0) for xml_bit in xml_bits[0].findall('bit')}
-                field = M3FieldInt(str_name, str_type, default_val or expected_val or 0, expected_val, bitmasks)
+                default_val     = int( str_default_val, 0 ) if str_default_val else None
+                expected_val    = int( str_expected_val, 0 ) if str_expected_val else None
+                bitmasks        = {}
+                xml_bits        = xml_field.findall('bits')
+                if len( xml_bits ):
+                    bitmasks    = { xml_bit.get('name'): int( xml_bit.get('mask'), 0 ) for xml_bit in xml_bits[0].findall('bit') }
+                field           = M3FieldInt( str_name, str_type, default_val or expected_val or 0, expected_val, bitmasks )
 
             elif str_type == 'float':
-                default_val = float(str_default_val) if str_default_val else None
-                expected_val = float(str_expected_val) if str_expected_val else None
-                field = M3FieldFloat(str_name, str_type, default_val or expected_val or 0.0, expected_val)
+                default_val     = float(str_default_val) if str_default_val else None
+                expected_val    = float(str_expected_val) if str_expected_val else None
+                field           = M3FieldFloat(str_name, str_type, default_val or expected_val or 0.0, expected_val)
 
             elif str_type is None:
-                size = int(str_size)
-                default_val = parse_hex_str(str_default_val)
-                expected_val = parse_hex_str(str_expected_val)
-                field = M3FieldBytes(str_name, size, default_val or expected_val or bytes(size), expected_val)
+                size            = int(str_size)
+                default_val     = parse_hex_str(str_default_val)
+                expected_val    = parse_hex_str(str_expected_val)
+                field           = M3FieldBytes(str_name, size, default_val or expected_val or bytes(size), expected_val)
             else:
-                v_pos = str_type.rfind('V')
+                v_pos           = str_type.rfind('V')
                 if v_pos != -1:
-                    field_name = str_type[:v_pos]
+                    field_name  = str_type[:v_pos]
                     field_version = int(str_type[v_pos + 1:])
                 else:
-                    field_name = str_type
+                    field_name  = str_type
                     field_version = 0
-                field_struct_history = histories.get(field_name)
+                field_struct_history = histories.get( field_name )
                 if field_struct_history is None:
                     raise Exception(f'{field_name} must be defined before {xml_structure_name}')
-                field_desc = field_struct_history.get_version(field_version)
-                field = M3FieldStructure(str_name, field_desc, str_ref_to)
+                field_desc      = field_struct_history.get_version( field_version )
+                field           = M3FieldStructure( str_name, field_desc, str_ref_to )
 
             all_field_versions.append({ii: field for ii in range(since_version or 0, (till_version if till_version is not None else version_max) + 1)})
 
-        histories[xml_structure_name] = M3StructureHistory(xml_structure_name, version_to_size, all_field_versions)
+        histories[xml_structure_name] = M3StructureHistory( xml_structure_name, version_to_size, all_field_versions )
 
     return histories
 
@@ -101,18 +108,18 @@ def structures_from_tree():
 class M3StructureHistory:
     ''' Container for information generally related to an M3 structure '''
 
-    def __init__(self, name, version_to_size, field_versions):
-        self.name = name
-        self.primitive = self.name in {'U8__', 'I16_', 'U16_', 'I32_', 'U32_', 'I64_', 'U64_', 'FLAG', 'REAL', 'CHAR'}
+    def __init__( self, name, version_to_size, field_versions ):
+        self.name           = name
+        self.primitive      = self.name in {'U8__', 'I16_', 'U16_', 'I32_', 'U32_', 'I64_', 'U64_', 'FLAG', 'REAL', 'CHAR'}
         self.field_versions = field_versions
         self.version_to_size = version_to_size
         self.version_to_description = {}
         # create all to check sizes
         for version in version_to_size:
-            self.get_version(version)
+            self.get_version( version )
 
-    def get_version(self, version, md_version=34):
-        desc_id = f'MD{md_version}_{version}'
+    def get_version( self, version, md_version=34 ):
+        desc_id             = f'MD{md_version}_{version}'
 
         if (desc := self.version_to_description.get(desc_id)) is None:
             fields = {field.name: field for field_versions in self.field_versions if (field := field_versions.get(version))}
@@ -123,8 +130,8 @@ class M3StructureHistory:
                         new_field_desc = structures[new_field_desc_name].get_version(field.desc.version, md_version)
                         fields[field.name] = M3FieldStructure(field.name, new_field_desc, field.ref_to)
 
-            calc_size = sum(field.size for field in fields.values())
-            spec_size = self.version_to_size.get(version)
+            calc_size       = sum( field.size for field in fields.values( ))
+            spec_size       = self.version_to_size.get( version )
             if calc_size != spec_size and md_version == 34:  # validate the specified size, but skip if model is not md34
                 offset = 0
                 stderr.write(f'Offsets of {self.name} in version {version}:\n')
@@ -141,7 +148,7 @@ class M3StructureDescription:
     ''' Container for information relating to a specific version of an M3 structure '''
 
     @classmethod
-    def get_vertex_description(cls, vertex_flags):
+    def get_vertex_description( cls, vertex_flags ):
         size = 0
         fields = []
 
@@ -372,17 +379,17 @@ class M3StructureData:
 class M3Field:
     ''' Container for information relating to a specific field in an M3StructureHistory or M3StructureDescription instance '''
 
-    def __init__(self, name):
+    def __init__( self, name ):
         self.name = name
 
-    def __repr__(self):
+    def __repr__( self ):
         return self.__class__.__name__
 
-    def default_set(self, data: M3StructureData):
-        setattr(data, self.name, getattr(self, 'default_value', ''))
+    def default_set( self, data: M3StructureData ):
+        setattr( data, self.name, getattr( self, 'default_value', '' ) )
 
 
-class M3FieldStructure(M3Field):
+class M3FieldStructure( M3Field ):
 
     def __init__(self, name, desc: M3StructureDescription, ref_to=''):
         M3Field.__init__(self, name)
@@ -474,34 +481,34 @@ class M3FieldFloat(M3FieldPrimitive):
             raise Exception(f'{field_path} {field_content} type is {type(field_content)}, not float')
 
 
-class M3SectionList(list):
+class M3SectionList( list ):
     ''' List object for M3Section instances '''
 
-    def __init__(self):
-        list.__init__(self, [])
-        self.filepath = None
-        self.file = None
-        self.model = None
+    def __init__( self ):
+        list.__init__( self, [] )
+        self.filepath   = None
+        self.file       = None
+        self.model      = None
         self.md_version = 34
 
-    def __getitem__(self, key):
-        if type(key) == M3StructureData:
-            item = self[key.index] if key.index and key.entries else []
+    def __getitem__( self, key ):
+        if type( key ) == M3StructureData:
+            item        = self[ key.index ] if key.index and key.entries else []
         else:
-            item = super(M3SectionList, self).__getitem__(key)
+            item        = super( M3SectionList, self ).__getitem__( key )
 
             if item is None:
-                self[key] = self.section_from_index_entry(self.index_entries[key])
+                self[key] = self.section_from_index_entry( self.index_entries[ key ] )
                 item = self[key]
 
         return item
 
-    def __setitem__(self, item, val):
-        assert type(val.desc) == M3StructureDescription
-        return super(M3SectionList, self).__setitem__(item, val)
+    def __setitem__( self, item, val ):
+        assert type( val.desc ) == M3StructureDescription
+        return super( M3SectionList, self ).__setitem__( item, val )
 
     @classmethod
-    def new(cls, name, version):
+    def new( cls, name, version ):
         self = cls()
 
         section = M3Section(desc=structures['MD34'].get_version(11), index_entry=None, references=[], content=[])
@@ -517,38 +524,38 @@ class M3SectionList(list):
         return self
 
     @classmethod
-    def load(cls, filepath, lazy=False):
-        self = cls()
-        self.filepath = filepath
-        self.index_entries = []
+    def load( cls, filepath, lazy=False ):
+        self                = cls()
+        self.filepath       = filepath
+        self.index_entries  = []
 
-        f = open(filepath, 'rb')
-        md_tag = f.read(4)[::-1].decode('ascii')
-        self.md_version = int(md_tag[2:])
-        f.seek(0)
-        m3_header = structures[md_tag].get_version(11)
-        header = m3_header.instance(f.read(m3_header.size))
-        f.seek(header.index_offset)
-        mdie = structures['MDIndexEntry'].get_version(self.md_version)
+        f                   = open( filepath, 'rb' )
+        md_tag              = f.read(4)[::-1].decode( 'ascii' )
+        self.md_version     = int( md_tag[2:] )
+        f.seek( 0 )
+        m3_header           = structures[md_tag].get_version( 11 )
+        header              = m3_header.instance( f.read( m3_header.size ) )
+        f.seek( header.index_offset )
+        mdie                = structures['MDIndexEntry'].get_version( self.md_version )
 
-        self.file = f
+        self.file           = f
 
-        for entry_buffer in [f.read(mdie.size) for ii in range(header.index_size)]:
-            index_entry = mdie.instance(entry_buffer)
-            tag_str = index_entry.tag.to_bytes(4, 'little').decode('ascii').replace('\x00', '')[::-1]
-            desc = structures[tag_str].get_version(index_entry.version, self.md_version)
+        for entry_buffer in [ f.read( mdie.size ) for ii in range( header.index_size ) ]:
+            index_entry     = mdie.instance( entry_buffer )
+            tag_str         = index_entry.tag.to_bytes( 4, 'little' ).decode( 'ascii' ).replace( '\x00', '' )[ ::-1 ]
+            desc            = structures[tag_str].get_version( index_entry.version, self.md_version )
 
             if desc is None:
-                stderr.write(f'Unknown section: {tag_str}V{index_entry.version} at offset {index_entry.offset}')
+                stderr.write( f'Unknown section: {tag_str}V{index_entry.version} at offset {index_entry.offset}' )
 
-            self.index_entries.append(index_entry)
-            self.append(self.section_from_index_entry(index_entry) if not lazy else None)
+            self.index_entries.append( index_entry )
+            self.append( self.section_from_index_entry( index_entry ) if not lazy else None )
 
         if not lazy:
             f.close()
-            self.file = None
+            self.file       = None
 
-        self.model = self[self[0][0].model][0]
+        self.model          = self[self[0][0].model][0]
 
         return self
 
@@ -583,21 +590,27 @@ class M3SectionList(list):
                 prev_section = section
             f.write(index_buffer)
 
-    def section_from_index_entry(self, index_entry):
-        tag_str = index_entry.tag.to_bytes(4, 'little').decode('ascii').replace('\x00', '')[::-1]
-        desc = structures[tag_str].get_version(index_entry.version, self.md_version)
-        self.file.seek(index_entry.offset)
-        section_buffer = self.file.read(index_entry.repetitions * desc.size)
-        section = M3Section(desc=desc, index_entry=index_entry, references=[], content=desc.instances(buffer=section_buffer, count=index_entry.repetitions))
-        section.raw_bytes = section_buffer
+    def section_from_index_entry( self, index_entry ):
+        tag_str             = index_entry.tag.to_bytes( 4, 'little' ).decode( 'ascii' ).replace( '\x00', '' )[::-1]
+        desc                = structures[tag_str].get_version( index_entry.version, self.md_version )
+        self.file.seek( index_entry.offset )
+        section_buffer      = self.file.read( index_entry.repetitions * desc.size )
+        section             = M3Section( desc=desc,
+                                         index_entry=index_entry,
+                                         references=[],
+                                         content=desc.instances( buffer=section_buffer, count=index_entry.repetitions ) )
+        section.raw_bytes   = section_buffer
         return section
 
-    def section_for_reference(self, structure, field, version=0, pos=-1):
-        ref_desc = structures[structure.desc.fields[field].ref_to].get_version(version)
-        section = M3Section(desc=ref_desc, index_entry=None, references=[getattr(structure, field)], content=[])
+    def section_for_reference( self, structure, field, version=0, pos=-1 ):
+        ref_desc            = structures[ structure.desc.fields[field].ref_to ].get_version( version )
+        section             = M3Section( desc=ref_desc,
+                                         index_entry=None,
+                                         references=[getattr(structure, field)],
+                                         content=[] )
 
-        if type(pos) is int:
-            self.insert(pos if pos >= 0 else len(self), section)
+        if type( pos ) is int:
+            self.insert( pos if pos >= 0 else len( self ), section )
 
         return section
 
@@ -712,12 +725,12 @@ class M3SectionList(list):
 class M3Section:
     ''' Container for M3StructureData (or primitive) instances '''
 
-    def __init__(self, desc: M3StructureDescription, index_entry: M3StructureData, references: list, content: list):
-        self.desc = desc
-        self.index_entry = index_entry
-        self.references = references
-        self.content = content
-        self.raw_bytes = None
+    def __init__( self, desc: M3StructureDescription, index_entry: M3StructureData, references: list, content: list ):
+        self.desc           = desc
+        self.index_entry    = index_entry
+        self.references     = references
+        self.content        = content
+        self.raw_bytes      = None
 
     def __str__(self):
         if self.index_entry:

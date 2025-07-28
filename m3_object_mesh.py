@@ -26,40 +26,40 @@ desc_mesh_uv = 'Specifies the exact UV map that should be used on the given M3 U
 
 
 def register_props():
-    bpy.types.Object.m3_mesh_batches = bpy.props.CollectionProperty(type=BatchPropertyGroup)
-    bpy.types.Object.m3_mesh_export = bpy.props.BoolProperty(options=set(), default=True, description=desc_mesh_export)
-    bpy.types.Object.m3_mesh_uv0 = bpy.props.StringProperty(options=set(), description=desc_mesh_uv)
-    bpy.types.Object.m3_mesh_uv1 = bpy.props.StringProperty(options=set(), description=desc_mesh_uv)
-    bpy.types.Object.m3_mesh_uv2 = bpy.props.StringProperty(options=set(), description=desc_mesh_uv)
-    bpy.types.Object.m3_mesh_uv3 = bpy.props.StringProperty(options=set(), description=desc_mesh_uv)
+    bpy.types.Object.m3_mesh_batches    = bpy.props.CollectionProperty(type=BatchPropertyGroup)
+    bpy.types.Object.m3_mesh_export     = bpy.props.BoolProperty(options=set(), default=True, description=desc_mesh_export)
+    bpy.types.Object.m3_mesh_uv0        = bpy.props.StringProperty(options=set(), description=desc_mesh_uv)
+    bpy.types.Object.m3_mesh_uv1        = bpy.props.StringProperty(options=set(), description=desc_mesh_uv)
+    bpy.types.Object.m3_mesh_uv2        = bpy.props.StringProperty(options=set(), description=desc_mesh_uv)
+    bpy.types.Object.m3_mesh_uv3        = bpy.props.StringProperty(options=set(), description=desc_mesh_uv)
 
 
-class BatchPropertyGroup(bpy.types.PropertyGroup):
-    material: bpy.props.PointerProperty(type=shared.M3MatRefPointerProp)
-    bone: bpy.props.PointerProperty(type=shared.M3BonePointerProp)
+class BatchPropertyGroup( bpy.types.PropertyGroup ):
+    material: bpy.props.PointerProperty(type=shared.M3MatRefPointerProp) # type: ignore
+    bone: bpy.props.PointerProperty(type=shared.M3BonePointerProp) # type: ignore
 
 
-class ClothSimOpSelect(bpy.types.Operator):
-    bl_idname = 'm3.cloth_sim_select'
-    bl_label = 'Select vertices'
-    bl_description = 'Selects the assigned vertices of the cloth simulation'
-    bl_options = {'UNDO'}
+class ClothSimOpSelect( bpy.types.Operator ):
+    bl_idname       = 'm3.cloth_sim_select'
+    bl_label        = 'Select vertices'
+    bl_description  = 'Selects the assigned vertices of the cloth simulation'
+    bl_options      = {'UNDO'}
 
-    def invoke(self, context, event):
+    def invoke( self, context, event ):
         for ob in context.selected_objects:
             if ob.type != 'MESH':
                 continue
 
-            me = ob.data
-            bm = bmesh.from_edit_mesh(me)
+            me      = ob.data
+            bm      = bmesh.from_edit_mesh( me )
 
-            group = bm_layer_cloth_sim(bm)
+            group   = bm_layer_cloth_sim( bm )
             for vert in bm.verts:
                 vert.select = True if vert[group] else vert.select
 
             bm.select_flush(True)
 
-            bmesh.update_edit_mesh(me)
+            bmesh.update_edit_mesh( me )
 
         return {'FINISHED'}
 

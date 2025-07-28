@@ -363,29 +363,29 @@ def pointer_set_args(*args):
 
 
 class M3BonePointerProp(bpy.types.PropertyGroup):
-    value: bpy.props.StringProperty(options=set(), get=pointer_get_args('data.bones'), set=pointer_set_args('data.bones', False))
-    handle: bpy.props.StringProperty(options=set())
+    value: bpy.props.StringProperty(options=set(), get=pointer_get_args('data.bones'), set=pointer_set_args('data.bones', False)) # type: ignore
+    handle: bpy.props.StringProperty(options=set()) # type: ignore
 
     def __str__(self):
         return 'Bone Pointer [' + self.name + ', ' + self.get('handle', '') + ', ' + self.get('value', '') + ']'
 
 
 class M3BonePointerPropExclusive(bpy.types.PropertyGroup):
-    value: bpy.props.StringProperty(options=set(), get=pointer_get_args('data.bones'), set=pointer_set_args('data.bones', True))
-    handle: bpy.props.StringProperty(options=set())
+    value: bpy.props.StringProperty(options=set(), get=pointer_get_args('data.bones'), set=pointer_set_args('data.bones', True)) # type: ignore
+    handle: bpy.props.StringProperty(options=set()) # type: ignore
 
     def __str__(self):
         return 'Bone Pointer (Exclusive) [' + self.name + ', ' + self["handle"] + ', ' + self["value"] + ']'
 
 
 class M3MatRefPointerProp(bpy.types.PropertyGroup):
-    value: bpy.props.StringProperty(options=set(), get=pointer_get_args('m3_materialrefs'), set=pointer_set_args('m3_materialrefs', False))
-    handle: bpy.props.StringProperty(options=set())
+    value: bpy.props.StringProperty(options=set(), get=pointer_get_args('m3_materialrefs'), set=pointer_set_args('m3_materialrefs', False)) # type: ignore
+    handle: bpy.props.StringProperty(options=set()) # type: ignore
 
 
 class M3ProjectionPointerProp(bpy.types.PropertyGroup):
-    value: bpy.props.StringProperty(options=set(), get=pointer_get_args('m3_projections'), set=pointer_set_args('m3_projections', False))
-    handle: bpy.props.StringProperty(options=set())
+    value: bpy.props.StringProperty(options=set(), get=pointer_get_args('m3_projections'), set=pointer_set_args('m3_projections', False)) # type: ignore
+    handle: bpy.props.StringProperty(options=set()) # type: ignore
 
 
 def draw_prop_pointer_search(layout, data, search_data, search_prop, text='', icon=None):
@@ -459,9 +459,9 @@ class M3CollectionOpBase(bpy.types.Operator):
     bl_label = 'Base Collection Operator'
     bl_options = {'UNDO'}
 
-    collection: bpy.props.StringProperty(default='m3_generics')
-    index: bpy.props.IntProperty()
-    shift: bpy.props.IntProperty()
+    collection: bpy.props.StringProperty(default='m3_generics') # type: ignore
+    index: bpy.props.IntProperty() # type: ignore
+    shift: bpy.props.IntProperty() # type: ignore
 
 
 class M3CollectionOpAdd(M3CollectionOpBase):
