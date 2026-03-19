@@ -1015,7 +1015,7 @@ class Importer:
                 layer_section_to_index[m3_layer_field.index] = len(ob.m3_materiallayers) - 1
                 setattr(mat, 'layer_' + layer_name, layer.bl_handle)
 
-        for matref, m3_matref in zip(ob.m3_materialrefs, self.m3[self.m3_model.material_references]):
+        for matref, m3_matref in zip(ob.m3_materialrefs[self.matref_index(0):], self.m3[self.m3_model.material_references]):
             mat = shared.m3_pointer_get(getattr(self.ob, matref.mat_type), matref.mat_handle)
             m3_mat = self.m3[getattr(self.m3_model, shared.material_type_to_model_reference[m3_matref.type])][m3_matref.material_index]
             if m3_matref.type == 3:  # composite materials
